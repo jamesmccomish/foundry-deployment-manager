@@ -1,0 +1,20 @@
+{
+  "name": "foundry-deployment-manager",
+  "license": "AGPL-3.0-only",
+  "version": "0.1.0",
+  "description": "Broadcast and track contracts deployed via Foundry.",
+  "files": [
+    "/src"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jamesmccomish/foundry-deployment-manager.git"
+  },
+  "devDependencies": {
+    "prettier": "^2.8.1",
+    "prettier-plugin-solidity": "^1.1.0"
+  },
+  "scripts": {
+    "lint": "prettier --write **.sol"
+  }
+}
