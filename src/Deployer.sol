@@ -6,7 +6,7 @@ import {ToyENS} from "./utils/ToyENS.sol";
 import {GenericFork} from "./forks/Generic.sol";
 //import {PolygonFork} from "mgv_test/lib/forks/Polygon.sol";
 import {MumbaiFork} from "./forks/Mumbai.sol";
-//import {LocalFork} from "mgv_test/lib/forks/Local.sol";
+import {LocalFork} from "./forks/Local.sol";
 import {console2 as console} from "forge-std/console2.sol";
 
 address constant ANVIL_DEFAULT_FIRST_ACCOUNT = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
@@ -14,11 +14,14 @@ address constant ANVIL_DEFAULT_FIRST_ACCOUNT = 0xf39Fd6e51aad88F6F4ce6aB8827279c
 /**
  * TODO
  * - Link to external env file (ie. that in the project root where this library will be installed)
- * - Support multiple chains
+ * - Support multiple chains (in a tidy way)
  * - Consider a more general check when setting the broadcaster
  */
 
-/* Writes deployments in 2 ways:
+/**
+ * @notice Some ease-of-life additions to forge-std/Test.sol
+ * @author Modified from Mangrove: https://github.com/mangrovedao/mangrove-core
+ * @dev Writes deployments in 2 ways:
    1. In a json file. Easier to write one directly than to parse&transform
    foundry broadcast log files.
    2. In a toy Ethereum Name Service (ENS) instance. Useful for testing when the server & testing script
@@ -32,7 +35,8 @@ address constant ANVIL_DEFAULT_FIRST_ACCOUNT = 0xf39Fd6e51aad88F6F4ce6aB8827279c
    3. Write a standalone run() function that will be called by forge script. Call outputDeployment() at the end of run() if you deployed any contract.
 
    Do not inherit other deployer scripts! Just instantiate them and call their
-   .innerRun() function;*/
+   .innerRun() function;
+ */
 abstract contract Deployer is Script2 {
     // singleton Fork so all deploy scripts talk to the same backend
     // singleton method used for fork, so constructor-modified state is kept (just doing vm.etch forgets that state diff)
@@ -55,6 +59,8 @@ abstract contract Deployer is Script2 {
             // TODO handle other chains
             if (block.chainid == 80001) {
                 fork = new MumbaiFork();
+            } else if (block.chainid == 31337) {
+                fork = new LocalFork();
             } else {
                 revert(string.concat("Unknown chain id ", vm.toString(block.chainid), ", cannot deploy."));
             }

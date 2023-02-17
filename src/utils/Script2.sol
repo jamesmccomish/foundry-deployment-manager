@@ -20,7 +20,7 @@ contract Script2 is Script {
     Shared global refs for multiple contracts. Better than `vm.etch(hash(name),address(new Contract()).code)`, which does *not* carry over state modification caused by the constructor.
   */
 
-    ToyENS internal _singletons = ToyENS(hashToAddress("Mangrove:Singletons"));
+    ToyENS internal _singletons = ToyENS(hashToAddress("Deployment:Singletons"));
 
     // Computes address from last 20 bytes of hash
     function hashToAddress(string memory str) internal pure returns (address) {
