@@ -18,10 +18,15 @@ contract TestDeployerA is DeploymentSelector {
     function innerRun() public {
         startBroadcast();
 
+        // Build initialization data
         bytes memory initData = abi.encode("A");
 
+        // Get the contract address and deployment bytecode based on deployment type
         (address contractAddress, bytes memory deploymentBytecode) = SelectDeployment("TestContractA", initData);
 
+        // Set the contract details to be written when outputted
         fork.set("TestContractA", contractAddress, deploymentBytecode);
+
+        stopBroadcast();
     }
 }

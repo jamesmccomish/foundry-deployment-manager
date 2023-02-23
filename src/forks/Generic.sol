@@ -98,7 +98,7 @@ contract GenericFork is Script {
                 return (new Record[](0));
             }
             try vm.parseJson(addressesRaw) returns (bytes memory jsonBytes) {
-                try (new Parser()).parseJsonBytesToRecords(jsonBytes) returns (Record[] memory records) {
+                try (new Parser()).parseJsonBytes(jsonBytes) returns (Record[] memory records) {
                     return records;
                 } catch {
                     revert(string.concat("Fork: JSON to Record[] parsing error on file ", fileName));
@@ -208,11 +208,7 @@ contract GenericFork is Script {
 /* Gadget contract which parses given bytes as Record[]. 
    Useful for catching abi.decode errors. */
 contract Parser {
-    function parseJsonBytesToRecords(bytes memory jsonBytes) external pure returns (Record[] memory) {
+    function parseJsonBytes(bytes memory jsonBytes) external pure returns (Record[] memory) {
         return abi.decode(jsonBytes, (Record[]));
-    }
-
-    function parseJsonBytesToBytesArray(bytes memory jsonBytes) external pure returns (BytecodeRecord[] memory) {
-        return abi.decode(jsonBytes, (BytecodeRecord[]));
     }
 }

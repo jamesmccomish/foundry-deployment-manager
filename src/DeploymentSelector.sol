@@ -10,7 +10,7 @@ contract DeploymentSelector is Deployer {
 
     /** TODO:
      *  ! Consider salt in create2 deployment
-     *  ! fix difference between check and getCode input
+     *  ! improve formatting of getCode input (contract file and contract declaration must be the same for now)
      */
 
     /**
@@ -24,15 +24,11 @@ contract DeploymentSelector is Deployer {
         string memory check,
         bytes memory initData
     ) public returns (address contractAddress, bytes memory deploymentBytecode) {
-        // todo move these
-        bool shouldDeterministicDeploy = vm.envBool("DETERMINISTIC_DEPLOYMENT");
-        bool shouldCheckDeployment = vm.envBool("CHECK_DEPLOYMENT");
-
         // Construct bytecode based off contract and initialization data
-        deploymentBytecode = abi.encodePacked(vm.getCode("TestContractA.t.sol:TestContractA"), initData);
+        deploymentBytecode = abi.encodePacked(vm.getCode(string.concat(check, ".t.sol:", check)), initData);
 
         // If deterministic deployment is enabled, we will use the create2 opcode to deploy the contract
-        if (shouldDeterministicDeploy) {
+        if (vm.envBool("DETERMINISTIC_DEPLOYMENT")) {
             assembly {
                 contractAddress := create2(0, add(deploymentBytecode, 0x20), mload(deploymentBytecode), 0)
             }
@@ -45,7 +41,8 @@ contract DeploymentSelector is Deployer {
         contractAddress = checkPreviousDeployment(check, initData);
 
         // If we should check for previous deployments, and there is one, return it
-        if (shouldCheckDeployment && contractAddress != address(0)) return (contractAddress, deploymentBytecode);
+        if (vm.envBool("CHECK_DEPLOYMENT") && contractAddress != address(0))
+            return (contractAddress, deploymentBytecode);
         else {
             // deploy contract
             assembly {
@@ -69,7 +66,7 @@ contract DeploymentSelector is Deployer {
         try fork.getWithBytecode(check) returns (address payable deployed, bytes memory bytecode) {
             return
                 keccak256(bytecode) ==
-                    keccak256(abi.encodePacked(vm.getCode("TestContractA.t.sol:TestContractA"), initData))
+                    keccak256(abi.encodePacked(vm.getCode(string.concat(check, ".t.sol:", check)), initData))
                     ? deployed
                     : address(0);
         } catch {

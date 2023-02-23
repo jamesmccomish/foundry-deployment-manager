@@ -8,5 +8,4 @@ node_modules/
 
 # Deployment files
 broadcast/
-bytecodes/ 
 local.json
