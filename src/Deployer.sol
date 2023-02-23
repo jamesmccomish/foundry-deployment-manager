@@ -141,6 +141,7 @@ abstract contract Deployer is Script2 {
             bool end = i + 1 == names.length;
             line("  {");
             line(string.concat('    "address": "', vm.toString(addrs[i]), '",'));
+            line(string.concat('    "bytecode": "', vm.toString(bytecodes[i]), '",'));
             line(string.concat('    "name": "', names[i], '"'));
             line(end ? "  }" : "  },");
         }

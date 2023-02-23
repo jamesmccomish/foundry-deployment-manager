@@ -9,11 +9,6 @@ import {ToyENS} from "../utils/ToyENS.sol";
 /* A record entry in an addresses JSON file */
 struct Record {
     address addr;
-    string name;
-}
-
-/* A bytecode record entry in an addresses JSON file */
-struct BytecodeRecord {
     bytes bytecode;
     string name;
 }
@@ -119,37 +114,6 @@ contract GenericFork is Script {
         return (new Record[](0));
     }
 
-    /* Read bytecodes from JSON files */
-
-    function bytecodesFile() public view returns (string memory) {
-        return string.concat(vm.projectRoot(), "/addresses/bytecodes/", NETWORK, ".json");
-    }
-
-    function readBytecodes() internal returns (BytecodeRecord[] memory) {
-        string memory fileName = bytecodesFile();
-        try vm.readFile(fileName) returns (string memory bytecodesRaw) {
-            if (bytes(bytecodesRaw).length == 0) {
-                return (new BytecodeRecord[](0));
-            }
-            try vm.parseJson(bytecodesRaw) returns (bytes memory jsonBytecodes) {
-                try (new Parser()).parseJsonBytesToBytesArray(jsonBytecodes) returns (
-                    BytecodeRecord[] memory parsedBytecodes
-                ) {
-                    return parsedBytecodes;
-                } catch {
-                    revert(string.concat("Fork: JSON to bytes[] parsing error on file ", fileName));
-                }
-            } catch {
-                revert(string.concat("Fork: JSON parsing error on file ", fileName));
-            }
-        } catch {
-            console.log("Fork: cannot read deployment file %s. Ignoring.", fileName);
-        }
-
-        // return empty record array by default
-        return (new BytecodeRecord[](0));
-    }
-
     /* Select/modify current fork
      ! Does not impact context/deployed mappings !
   */
@@ -186,18 +150,16 @@ contract GenericFork is Script {
         // survive all fork operations
         vm.makePersistent(address(this));
 
-        BytecodeRecord[] memory existingBytecodes = readBytecodes();
-
         // read addresses from JSON files
         Record[] memory records = readAddresses("context");
 
         for (uint i = 0; i < records.length; i++) {
-            context.set(records[i].name, records[i].addr, existingBytecodes[i].bytecode);
+            context.set(records[i].name, records[i].addr, records[i].bytecode);
             label(records[i].addr, records[i].name);
         }
         records = readAddresses("deployed");
         for (uint i = 0; i < records.length; i++) {
-            set(records[i].name, records[i].addr, existingBytecodes[i].bytecode);
+            set(records[i].name, records[i].addr, records[i].bytecode);
         }
 
         // If a remote ToyENS is found, import its records.

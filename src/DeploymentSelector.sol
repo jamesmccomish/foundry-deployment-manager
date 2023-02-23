@@ -45,7 +45,7 @@ contract DeploymentSelector is Deployer {
         contractAddress = checkPreviousDeployment(check, initData);
 
         // If we should check for previous deployments, and there is one, return it
-        if (shouldCheckDeployment && contractAddress != address(0)) return (contractAddress, new bytes(0));
+        if (shouldCheckDeployment && contractAddress != address(0)) return (contractAddress, deploymentBytecode);
         else {
             // deploy contract
             assembly {
