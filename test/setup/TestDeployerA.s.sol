@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
-import {TestContractA} from "./TestContractA.t.sol";
-import {Deployer} from "../../src/Deployer.sol";
+import {DeploymentSelector} from "../../src/DeploymentSelector.sol";
 
-contract TestDeployerA is Deployer {
+import {TestContractA} from "./TestContractA.t.sol";
+
+import "forge-std/console.sol";
+
+contract TestDeployerA is DeploymentSelector {
     TestContractA public contractA;
 
     function run() public {
@@ -13,10 +16,12 @@ contract TestDeployerA is Deployer {
     }
 
     function innerRun() public {
-        broadcast();
+        startBroadcast();
 
-        contractA = new TestContractA("A");
+        bytes memory initData = abi.encode("A");
 
-        fork.set("TestContractA", address(contractA));
+        (address contractAddress, bytes memory deploymentBytecode) = SelectDeployment("TestContractA", initData);
+
+        fork.set("TestContractA", contractAddress, deploymentBytecode);
     }
 }

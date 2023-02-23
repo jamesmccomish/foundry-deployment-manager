@@ -12,6 +12,12 @@ struct Record {
     string name;
 }
 
+/* A bytecode record entry in an addresses JSON file */
+struct BytecodeRecord {
+    bytes bytecode;
+    string name;
+}
+
 /* 
 Note: when you add a *Fork contract, to have it available in deployment scripts,
 remember to add it to the initialized forks in Deployer.sol.*/
@@ -40,9 +46,9 @@ contract GenericFork is Script {
 
     /* get/set addresses, passthrough to context/deployed ToyENS instances */
 
-    function set(string memory name, address addr) public {
+    function set(string memory name, address addr, bytes memory bytecode) public {
         require(context._addrs(name) == address(0), "Fork: context addresses cannot be changed.");
-        deployed.set(name, addr);
+        deployed.set(name, addr, bytecode);
         label(addr, name);
     }
 
@@ -62,11 +68,21 @@ contract GenericFork is Script {
         }
     }
 
+    function getWithBytecode(string memory name) public view returns (address payable addr, bytes memory bytecode) {
+        addr = getNoRevert(name);
+        if (addr == address(0)) {
+            revert(
+                "Fork::get(string name): no contract found for name argument, either in context nor in deployed addresses. Check the appropriate context/<chain>.json and deployed/<chain>.json, and make sure you are doing fork.set(name,address) for all your deployed contracts."
+            );
+        }
+        bytecode = deployed._bytecodes(name);
+    }
+
     function has(string memory name) public view returns (bool) {
         return getNoRevert(name) != address(0);
     }
 
-    function allDeployed() public view returns (string[] memory, address[] memory) {
+    function allDeployed() public view returns (string[] memory, address[] memory, bytes[] memory) {
         return deployed.all();
     }
 
@@ -87,7 +103,7 @@ contract GenericFork is Script {
                 return (new Record[](0));
             }
             try vm.parseJson(addressesRaw) returns (bytes memory jsonBytes) {
-                try (new Parser()).parseJsonBytes(jsonBytes) returns (Record[] memory records) {
+                try (new Parser()).parseJsonBytesToRecords(jsonBytes) returns (Record[] memory records) {
                     return records;
                 } catch {
                     revert(string.concat("Fork: JSON to Record[] parsing error on file ", fileName));
@@ -101,6 +117,37 @@ contract GenericFork is Script {
 
         // return empty record array by default
         return (new Record[](0));
+    }
+
+    /* Read bytecodes from JSON files */
+
+    function bytecodesFile() public view returns (string memory) {
+        return string.concat(vm.projectRoot(), "/addresses/bytecodes/", NETWORK, ".json");
+    }
+
+    function readBytecodes() internal returns (BytecodeRecord[] memory) {
+        string memory fileName = bytecodesFile();
+        try vm.readFile(fileName) returns (string memory bytecodesRaw) {
+            if (bytes(bytecodesRaw).length == 0) {
+                return (new BytecodeRecord[](0));
+            }
+            try vm.parseJson(bytecodesRaw) returns (bytes memory jsonBytecodes) {
+                try (new Parser()).parseJsonBytesToBytesArray(jsonBytecodes) returns (
+                    BytecodeRecord[] memory parsedBytecodes
+                ) {
+                    return parsedBytecodes;
+                } catch {
+                    revert(string.concat("Fork: JSON to bytes[] parsing error on file ", fileName));
+                }
+            } catch {
+                revert(string.concat("Fork: JSON parsing error on file ", fileName));
+            }
+        } catch {
+            console.log("Fork: cannot read deployment file %s. Ignoring.", fileName);
+        }
+
+        // return empty record array by default
+        return (new BytecodeRecord[](0));
     }
 
     /* Select/modify current fork
@@ -139,23 +186,26 @@ contract GenericFork is Script {
         // survive all fork operations
         vm.makePersistent(address(this));
 
+        BytecodeRecord[] memory existingBytecodes = readBytecodes();
+
         // read addresses from JSON files
         Record[] memory records = readAddresses("context");
+
         for (uint i = 0; i < records.length; i++) {
-            context.set(records[i].name, records[i].addr);
+            context.set(records[i].name, records[i].addr, existingBytecodes[i].bytecode);
             label(records[i].addr, records[i].name);
         }
         records = readAddresses("deployed");
         for (uint i = 0; i < records.length; i++) {
-            set(records[i].name, records[i].addr);
+            set(records[i].name, records[i].addr, existingBytecodes[i].bytecode);
         }
 
         // If a remote ToyENS is found, import its records.
         ToyENS remoteEns = ToyENS(address(bytes20(hex"decaf0")));
         if (address(remoteEns).code.length > 0) {
-            (string[] memory names, address[] memory addrs) = remoteEns.all();
+            (string[] memory names, address[] memory addrs, bytes[] memory bytecodes) = remoteEns.all();
             for (uint i = 0; i < names.length; i++) {
-                set(names[i], addrs[i]);
+                set(names[i], addrs[i], bytecodes[i]);
             }
         }
 
@@ -196,7 +246,11 @@ contract GenericFork is Script {
 /* Gadget contract which parses given bytes as Record[]. 
    Useful for catching abi.decode errors. */
 contract Parser {
-    function parseJsonBytes(bytes memory jsonBytes) external pure returns (Record[] memory) {
+    function parseJsonBytesToRecords(bytes memory jsonBytes) external pure returns (Record[] memory) {
         return abi.decode(jsonBytes, (Record[]));
+    }
+
+    function parseJsonBytesToBytesArray(bytes memory jsonBytes) external pure returns (BytecodeRecord[] memory) {
+        return abi.decode(jsonBytes, (BytecodeRecord[]));
     }
 }

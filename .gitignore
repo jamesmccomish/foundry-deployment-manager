@@ -6,5 +6,7 @@ out/
 .env
 node_modules/
 
-# Deployment file
+# Deployment files
 broadcast/
+bytecodes/ 
+local.json

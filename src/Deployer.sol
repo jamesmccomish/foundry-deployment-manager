@@ -25,8 +25,7 @@ address constant ANVIL_DEFAULT_FIRST_ACCOUNT = 0xf39Fd6e51aad88F6F4ce6aB8827279c
    1. In a json file. Easier to write one directly than to parse&transform
    foundry broadcast log files.
    2. In a toy Ethereum Name Service (ENS) instance. Useful for testing when the server & testing script
-   are both spawned in-process. Holds additional info on the contracts (whether
-   it's a token). In the future, could be either removed (in favor of a
+   are both spawned in-process. In the future, could be either removed (in favor of a
    file-based solution), or expanded (if an onchain addressProvider appears).
 
    How to use:
@@ -129,11 +128,11 @@ abstract contract Deployer is Script2 {
     string out;
 
     function outputDeployment() internal {
-        (string[] memory names, address[] memory addrs) = fork.allDeployed();
+        (string[] memory names, address[] memory addrs, bytes[] memory bytecodes) = fork.allDeployed();
 
         if (address(remoteEns).code.length > 0) {
             broadcast();
-            remoteEns.set(names, addrs);
+            remoteEns.set(names, addrs, bytecodes);
         }
 
         out = "";

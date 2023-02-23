@@ -36,9 +36,10 @@ contract Script2 is Script {
         }
     }
 
+    // ! check setting blank value is always fine at this stage
     function singleton(string memory name, address addr) public {
         require(singleton(name) == address(0), "Script2: cannot update existing singleton");
-        _singletons.set(name, addr);
+        _singletons.set(name, addr, abi.encode(""));
     }
 
     /* *** Logging *** */
