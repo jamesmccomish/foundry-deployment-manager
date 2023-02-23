@@ -5,3 +5,6 @@ out/
 # Project files
 .env
 node_modules/
+
+# Deployment file
+broadcast/

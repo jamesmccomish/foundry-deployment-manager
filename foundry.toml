@@ -2,3 +2,12 @@
 src = 'src'
 out = 'out'
 solc = "0.8.15"
+fs_permissions = [{ access = "read-write", path = "./addresses/"}, { access = "read", path = "./out/"}]
+
+[rpc_endpoints]
+fuji = "${FUJI_RPC_URL}"
+mumbai = "${MUMBAI_RPC_URL}"
+
+[etherscan]
+fuji = { key = "${SNOWTRACE_API_KEY}" }
+mumbai = { key = "${POLYSCAN_API_KEY}" }
