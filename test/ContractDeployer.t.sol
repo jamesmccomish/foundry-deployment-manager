@@ -6,8 +6,8 @@ import {GenericFork, Parser, Record} from "../src/forks/Generic.sol";
 
 import {TestDeployerA} from "./setup/TestDeployerA.s.sol";
 
-import {TestContractA} from "./setup/TestContractA.t.sol";
-import {TestContractB} from "./setup/TestContractB.t.sol";
+import {TestContractA} from "./setup/TestContractA.sol";
+import {TestContractB} from "./setup/TestContractB.sol";
 
 import {Test2, Test} from "../src/utils/Test2.sol";
 

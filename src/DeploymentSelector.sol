@@ -25,7 +25,7 @@ contract DeploymentSelector is Deployer {
         bytes memory initData
     ) public returns (address contractAddress, bytes memory deploymentBytecode) {
         // Construct bytecode based off contract and initialization data
-        deploymentBytecode = abi.encodePacked(vm.getCode(string.concat(check, ".t.sol:", check)), initData);
+        deploymentBytecode = abi.encodePacked(vm.getCode(string.concat(check, ".sol:", check)), initData);
 
         // If deterministic deployment is enabled, we will use the create2 opcode to deploy the contract
         if (vm.envBool("DETERMINISTIC_DEPLOYMENT")) {
@@ -66,7 +66,7 @@ contract DeploymentSelector is Deployer {
         try fork.getWithBytecode(check) returns (address payable deployed, bytes memory bytecode) {
             return
                 keccak256(bytecode) ==
-                    keccak256(abi.encodePacked(vm.getCode(string.concat(check, ".t.sol:", check)), initData))
+                    keccak256(abi.encodePacked(vm.getCode(string.concat(check, ".sol:", check)), initData))
                     ? deployed
                     : address(0);
         } catch {
