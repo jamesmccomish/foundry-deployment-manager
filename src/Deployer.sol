@@ -4,7 +4,7 @@ pragma solidity ^0.8.13;
 import {Script2} from "./utils/Script2.sol";
 import {ToyENS} from "./utils/ToyENS.sol";
 import {GenericFork} from "./forks/Generic.sol";
-//import {PolygonFork} from "mgv_test/lib/forks/Polygon.sol";
+import {PolygonFork} from "./forks/Polygon.sol";
 import {MumbaiFork} from "./forks/Mumbai.sol";
 import {LocalFork} from "./forks/Local.sol";
 import {console2 as console} from "forge-std/console2.sol";
@@ -56,7 +56,9 @@ abstract contract Deployer is Script2 {
         if (singleton("Deployer:Fork") == address(0)) {
             // depending on which fork the script is running on, choose whether to write the addresses to a file, get the right fork contract, and name the current network.
             // TODO handle other chains
-            if (block.chainid == 80001) {
+            if (block.chainid == 137) {
+                fork = new PolygonFork();
+            } else if (block.chainid == 80001) {
                 fork = new MumbaiFork();
             } else if (block.chainid == 31337) {
                 fork = new LocalFork();
